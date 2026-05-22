@@ -24,30 +24,27 @@ try {
   
   for (const potentialPath of possiblePaths) {
     try {
-      console.log(`Trying to load service account from: ${potentialPath}`);
       if (fs.existsSync(potentialPath)) {
         serviceAccount = JSON.parse(fs.readFileSync(potentialPath, 'utf8'));
-        console.log(`Successfully loaded service account from ${potentialPath}`);
         break;
       }
-    } catch (err) {
-      console.error(`Failed to load from ${potentialPath}: ${err.message}`);
-    }
+    } catch (err) {}
   }
   
   if (serviceAccount) {
     firebaseApp = admin.initializeApp({
       credential: admin.credential.cert(serviceAccount)
     });
-    console.log('Firebase Admin initialized successfully with service account file');
   } else {
-    console.warn('No service account file found, falling back to environment variables');
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY
+      ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n').replace(/"/g, '')
+      : undefined;
     
     firebaseApp = admin.initializeApp({
       credential: admin.credential.cert({
         projectId: process.env.FIREBASE_PROJECT_ID,
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
+        privateKey: privateKey
       })
     });
   }
